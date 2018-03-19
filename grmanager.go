@@ -2,6 +2,7 @@ package grtm
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -24,6 +25,7 @@ type GoroutineChannel struct {
 type GrManager struct {
 	mutex      sync.Mutex
 	grchannels map[string]*GoroutineChannel
+	wg         sync.WaitGroup
 }
 
 func (gm *GrManager) register(name string) error {
@@ -53,9 +55,21 @@ func (gm *GrManager) unregister(name string) error {
 	return nil
 }
 
+// Wait for all the goroutines to end
+func (gm *GrManager) Wait() {
+	gm.wg.Wait()
+}
+
 // NewNormalGoroutine create a normal goroutine including register and unregister, but the register and unregister make no sense, the goroutine will stop itself
 func (gm *GrManager) NewNormalGoroutine(name string, fc interface{}, args ...interface{}) {
+	gm.wg.Add(1)
 	go func() {
+		defer gm.wg.Done()
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("Work failed with %s\n", err)
+			}
+		}()
 		//register channel
 		err := gm.register(name)
 		if err != nil {
@@ -74,7 +88,14 @@ func (gm *GrManager) NewNormalGoroutine(name string, fc interface{}, args ...int
 
 // NewLoopGoroutine create a loop goroutine including register, it will repeatitively execute the function until a STOP message is sended in the message channel
 func (gm *GrManager) NewLoopGoroutine(name string, fc interface{}, args ...interface{}) {
+	gm.wg.Add(1)
 	go func() {
+		defer gm.wg.Done()
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("Work failed with %s\n", err)
+			}
+		}()
 		//register channel
 		err := gm.register(name)
 		if err != nil {
@@ -120,13 +141,20 @@ func (gm *GrManager) StopGoroutine(name string) error {
 
 // NewDiyGoroutine create a diy goroutine, the "diy" means the function will define a chMsg parameter which like a slot, NewDiyGoroutine will register a channel and send it to the function, so the function will use the chMsg to stop
 func (gm *GrManager) NewDiyGoroutine(name string, fc interface{}, args ...interface{}) {
+	gm.wg.Add(1)
 	go func() {
+		defer gm.wg.Done()
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("Work failed with %s\n", err)
+			}
+		}()
 		//register channel
 		err := gm.register(name)
 		if err != nil {
 			return
 		}
-		if len(args) >= 1 {
+		if len(args) > 1 {
 			fc.(func(chan string, ...interface{}))(gm.grchannels[name].chMsg, args)
 		} else if len(args) == 1 {
 			fc.(func(chan string, interface{}))(gm.grchannels[name].chMsg, args[0])

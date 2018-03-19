@@ -10,7 +10,7 @@ go get github.com/fourth04/grtm
 
 ## Create normal goroutine
 
-```golang
+```go
 package main
 
 import (
@@ -21,19 +21,20 @@ import (
 
 func normal() {
     fmt.Println("i am normal goroutine")
+    time.Sleep(time.Second * time.Duration(5))
 }
 
 func main() {
         gm := &grtm.GrManager{}
         gm.NewNormalGoroutine("normal", normal)
         fmt.Println("main function")
-        time.Sleep(time.Second * time.Duration(5))
+        gm.Wait()
 }
 ```
 
 ## Create normal goroutine function with params
 
-```golang
+```go
 package main
 
 import (
@@ -50,6 +51,7 @@ func normal() {
 func funcWithParams(args ...interface{}) {
 	fmt.Println(args[0].([]interface{})[0].(string))
 	fmt.Println(args[0].([]interface{})[1].(string))
+	time.Sleep(time.Second * time.Duration(5))
 }
 
 func main() {
@@ -57,13 +59,13 @@ func main() {
 	gm.NewNormalGoroutine("normal", normal)
 	fmt.Println("main function")
 	gm.NewNormalGoroutine("funcWithParams", funcWithParams, "hello", "world")
-	time.Sleep(time.Second * time.Duration(5))
+    gm.Wait()
 }
 ```
 
 ## Create long loop goroutine then stop it
 
-```golang
+```go
 package main
 
 import (
@@ -84,7 +86,7 @@ func main() {
 	time.Sleep(time.Second * time.Duration(20))
 	fmt.Println("stop myfunc goroutine")
 	gm.StopGoroutine("myfunc")
-	time.Sleep(time.Second * time.Duration(30))
+    gm.Wait()
 }
 ```
 
@@ -108,7 +110,7 @@ stop myfunc goroutine
 
 ## Create diy goroutine
 
-```golang
+```go
 package main
 
 import (
@@ -137,7 +139,7 @@ func main() {
 	fmt.Println("main function")
 	time.Sleep(time.Second * time.Duration(5))
     gm.StopDiyGoroutine("diy")
-	time.Sleep(time.Second * time.Duration(10))
+    gm.Wait()
 }
 ```
 
@@ -173,6 +175,6 @@ func main() {
 	fmt.Println("main function")
 	time.Sleep(time.Second * time.Duration(5))
 	gm.StopDiyGoroutine("funcWithParams")
-	time.Sleep(time.Second * time.Duration(10))
+    gm.Wait()
 }
 ```
