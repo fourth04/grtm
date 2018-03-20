@@ -55,6 +55,12 @@ func (gm *GrManager) unregister(name string) error {
 	return nil
 }
 
+// IsDefined checks did the name has been defined
+func (gm *GrManager) IsDefined(name string) bool {
+	_, ok := gm.grchannels[name]
+	return ok
+}
+
 // Wait for all the goroutines to end
 func (gm *GrManager) Wait() {
 	gm.wg.Wait()
