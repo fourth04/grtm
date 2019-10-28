@@ -5,7 +5,7 @@ grtm is a tool to manage golang goroutines.use this can start or stop a long loo
 
 ## Getting started
 ```bash
-go get github.com/fourth04/grtm
+go get github.com/gyangyun/grtm
 ```
 
 ## Create normal goroutine
@@ -15,7 +15,7 @@ package main
 
 import (
         "fmt"
-        "github.com/fourth04/grtm"
+        "github.com/gyangyun/grtm"
         "time"
        )
 
@@ -41,7 +41,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fourth04/grtm"
+	"github.com/gyangyun/grtm"
 )
 
 func normal() {
@@ -70,7 +70,7 @@ package main
 
 import (
         "fmt"
-        "github.com/fourth04/grtm"
+        "github.com/gyangyun/grtm"
         "time"
        )
 
@@ -117,7 +117,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fourth04/grtm"
+	"github.com/gyangyun/grtm"
 )
 
 func diy(chMsg chan string) {
@@ -152,7 +152,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fourth04/grtm"
+	"github.com/gyangyun/grtm"
 )
 
 func funcWithParams(chMsg chan string, args ...interface{}) {

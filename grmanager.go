@@ -2,8 +2,8 @@ package grtm
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -66,14 +66,27 @@ func (gm *GrManager) Wait() {
 	gm.wg.Wait()
 }
 
-// NewNormalGoroutine create a normal goroutine including register and unregister, but the register and unregister make no sense, the goroutine will stop itself
+// Info get the registered taskname
+func (gm *GrManager) Info() []string {
+	gm.mutex.Lock()
+	defer gm.mutex.Unlock()
+	keys := make([]string, len(gm.grchannels))
+	i := 0
+	for k := range gm.grchannels {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
+
+// NewNormalGoroutine create a normal goroutine including register and unregister, but the register and unregister make no sense, the goroutine will stop by itself
 func (gm *GrManager) NewNormalGoroutine(name string, fc interface{}, args ...interface{}) {
 	gm.wg.Add(1)
 	go func() {
 		defer gm.wg.Done()
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("Work failed with %s\n", err)
+				debug.PrintStack()
 			}
 		}()
 		//register channel
@@ -82,7 +95,7 @@ func (gm *GrManager) NewNormalGoroutine(name string, fc interface{}, args ...int
 			return
 		}
 		if len(args) > 1 {
-			fc.(func(...interface{}))(args)
+			fc.(func(...interface{}))(args...)
 		} else if len(args) == 1 {
 			fc.(func(interface{}))(args[0])
 		} else {
@@ -99,7 +112,7 @@ func (gm *GrManager) NewLoopGoroutine(name string, fc interface{}, args ...inter
 		defer gm.wg.Done()
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("Work failed with %s\n", err)
+				debug.PrintStack()
 			}
 		}()
 		//register channel
@@ -114,16 +127,16 @@ func (gm *GrManager) NewLoopGoroutine(name string, fc interface{}, args ...inter
 				signal, gid := taskInfo[0], taskInfo[1]
 				if gid == strconv.Itoa(int(gm.grchannels[name].gid)) {
 					if signal == STOP {
-						fmt.Printf("[gid: %s, name: %s] quit\n", gid, name)
+						// fmt.Printf("[gid: %s, name: %s] quit\n", gid, name)
 						gm.unregister(name)
 						return
 					}
-					fmt.Println("unknown signal")
+					// fmt.Println("unknown signal")
 				}
 			default:
-				fmt.Println("no signal")
+				// fmt.Println("no signal")
 				if len(args) > 1 {
-					fc.(func(...interface{}))(args)
+					fc.(func(...interface{}))(args...)
 				} else if len(args) == 1 {
 					fc.(func(interface{}))(args[0])
 				} else {
@@ -152,7 +165,7 @@ func (gm *GrManager) NewDiyGoroutine(name string, fc interface{}, args ...interf
 		defer gm.wg.Done()
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("Work failed with %s\n", err)
+				debug.PrintStack()
 			}
 		}()
 		//register channel
@@ -161,7 +174,7 @@ func (gm *GrManager) NewDiyGoroutine(name string, fc interface{}, args ...interf
 			return
 		}
 		if len(args) > 1 {
-			fc.(func(chan string, ...interface{}))(gm.grchannels[name].chMsg, args)
+			fc.(func(chan string, ...interface{}))(gm.grchannels[name].chMsg, args...)
 		} else if len(args) == 1 {
 			fc.(func(chan string, interface{}))(gm.grchannels[name].chMsg, args[0])
 		} else {
@@ -176,8 +189,8 @@ func (gm *GrManager) StopDiyGoroutine(name string) error {
 	if err != nil {
 		return err
 	}
-	gid := strconv.Itoa(int(gm.grchannels[name].gid))
-	fmt.Printf("[gid: %s, name: %s] quit\n", gid, name)
+	/* gid := strconv.Itoa(int(gm.grchannels[name].gid))
+	fmt.Printf("[gid: %s, name: %s] quit\n", gid, name) */
 	gm.unregister(name)
 	return nil
 }
